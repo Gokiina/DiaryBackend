@@ -1,7 +1,7 @@
 # Stage 1: Build the Spring Boot application
 # Usamos una imagen base que ya tiene Maven y OpenJDK 17.
 # Esta etapa se encarga de compilar tu proyecto.
-FROM maven:3.9.6-openjdk-17 AS build
+FROM maven:3.9.6-jdk-17 AS build
 
 # Establecemos el directorio de trabajo dentro del contenedor para esta etapa.
 WORKDIR /app
