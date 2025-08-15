@@ -25,7 +25,7 @@ WORKDIR /app
 
 # Copiamos el archivo JAR compilado desde la etapa de "build" a la imagen final.
 # ¡IMPORTANTE! Usamos el nombre exacto del JAR generado.
-COPY --from=build /app/target/Diary-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Expone el puerto por defecto de Spring Boot (8080).
 EXPOSE 8080
