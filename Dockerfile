@@ -10,12 +10,13 @@ RUN mvn dependency:go-offline
 COPY src src
 
 RUN mvn clean package -DskipTests
+RUN ls -lh /app/target/
 
 FROM openjdk:17-jdk-slim
 
 WORKDIR /app
 
-COPY --from=build /app/target/app.jar app.jar
+COPY --from=build /app/target/app.jar app.jar # We'll re-evaluate this after checking logs
 
 EXPOSE 8080
 
