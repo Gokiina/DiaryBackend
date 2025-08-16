@@ -9,7 +9,7 @@ import com.app.Diary.payload.SignUpRequest;
 import com.app.Diary.repository.UserRepository;
 import com.app.Diary.security.JwtTokenProvider;
 
-// --- NUEVOS IMPORTS PARA GOOGLE ---
+// Imports para Google
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 import com.google.api.client.http.javanet.NetHttpTransport;
@@ -37,34 +37,51 @@ import java.util.Optional;
 public class AuthController {
 
     @Autowired
-    AuthenticationManager authenticationManager;
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    UserRepository userRepository;
+    private UserRepository userRepository;
 
     @Autowired
-    PasswordEncoder passwordEncoder;
+    private PasswordEncoder passwordEncoder;
 
     @Autowired
-    JwtTokenProvider tokenProvider;
+    private JwtTokenProvider tokenProvider;
 
-    // --- NUEVO: Inyectamos el Google Client ID desde application.properties ---
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
-
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        // ... (código existente sin cambios)
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        loginRequest.getEmail(),
+                        loginRequest.getPassword()
+                )
+        );
+
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = tokenProvider.generateToken(authentication);
+        return ResponseEntity.ok(new AuthResponse(jwt));
     }
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
-        // ... (código existente sin cambios)
+        if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
+            return new ResponseEntity<>("¡El correo electrónico ya está en uso!", HttpStatus.BAD_REQUEST);
+        }
+
+        User user = new User();
+        user.setName(signUpRequest.getName());
+        user.setEmail(signUpRequest.getEmail());
+        user.setPassword(passwordEncoder.encode(signUpRequest.getPassword()));
+        user.setProvider(AuthProvider.local);
+
+        userRepository.save(user);
+
+        return new ResponseEntity<>("¡Usuario registrado exitosamente!", HttpStatus.CREATED);
     }
 
-
-    // --- NUEVO ENDPOINT PARA LOGIN CON GOOGLE ---
     @PostMapping("/google")
     public ResponseEntity<?> authenticateUserWithGoogle(@RequestBody GoogleTokenRequest googleTokenRequest) {
         GoogleIdTokenVerifier verifier = new GoogleIdTokenVerifier.Builder(new NetHttpTransport(), new GsonFactory())
@@ -73,43 +90,37 @@ public class AuthController {
 
         GoogleIdToken idToken;
         try {
-            // Verificamos el token que nos llega del frontend
             idToken = verifier.verify(googleTokenRequest.getToken());
         } catch (Exception e) {
             return new ResponseEntity<>("Token de Google inválido", HttpStatus.UNAUTHORIZED);
         }
 
-        if (idToken != null) {
-            GoogleIdToken.Payload payload = idToken.getPayload();
-            String email = payload.getEmail();
-            String name = (String) payload.get("name");
-
-            // Comprobamos si el usuario ya existe en nuestra BD
-            Optional<User> userOptional = userRepository.findByEmail(email);
-            User user;
-
-            if (userOptional.isPresent()) {
-                // Si el usuario existe, lo usamos
-                user = userOptional.get();
-            } else {
-                // Si no existe, creamos uno nuevo
-                user = new User();
-                user.setEmail(email);
-                user.setName(name);
-                user.setProvider(AuthProvider.google);
-                // Para usuarios de Google, no necesitamos guardar una contraseña
-                userRepository.save(user);
-            }
-
-            // Creamos una "autenticación" para el usuario y generamos nuestro propio token JWT
-            Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
-            SecurityContextHolder.getContext().setAuthentication(authentication);
-            String jwt = tokenProvider.generateToken(authentication);
-
-            return ResponseEntity.ok(new AuthResponse(jwt));
-
-        } else {
+        if (idToken == null) {
             return new ResponseEntity<>("Token de Google inválido", HttpStatus.UNAUTHORIZED);
         }
+
+        GoogleIdToken.Payload payload = idToken.getPayload();
+        String email = payload.getEmail();
+        String name = (String) payload.get("name");
+
+        Optional<User> userOptional = userRepository.findByEmail(email);
+        User user;
+
+        if (userOptional.isPresent()) {
+            user = userOptional.get();
+        } else {
+            user = new User();
+            user.setEmail(email);
+            user.setName(name);
+            user.setProvider(AuthProvider.google);
+            userRepository.save(user);
+        }
+
+        // Creamos una autenticación para el usuario y generamos nuestro propio token JWT
+        Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        String jwt = tokenProvider.generateToken(authentication);
+
+        return ResponseEntity.ok(new AuthResponse(jwt));
     }
 }
