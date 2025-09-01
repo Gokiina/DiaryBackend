@@ -1,10 +1,10 @@
-package com.app.Diary.controller; // Asegúrate de que el paquete sea correcto
+package com.app.Diary.controller;
 
 import com.app.Diary.model.AuthProvider;
 import com.app.Diary.model.User;
-import com.app.Diary.payload.AuthResponse;
 import com.app.Diary.payload.GoogleTokenRequest;
 import com.app.Diary.payload.LoginRequest;
+import com.app.Diary.payload.LoginResponse; // MODIFICADO: Import para la nueva respuesta
 import com.app.Diary.payload.SignUpRequest;
 import com.app.Diary.repository.UserRepository;
 import com.app.Diary.security.JwtTokenProvider;
@@ -23,6 +23,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails; // AÑADIDO: Para obtener info del usuario
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,7 +63,14 @@ public class AuthController {
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
-        return ResponseEntity.ok(new AuthResponse(jwt));
+
+        // AÑADIDO: Obtener los detalles del usuario para devolverlos en la respuesta
+        UserDetails userDetails = (UserDetails) authentication.getPrincipal();
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new RuntimeException("Error: Usuario no encontrado después de la autenticación."));
+
+        // MODIFICADO: Devolver el token Y el usuario
+        return ResponseEntity.ok(new LoginResponse(jwt, user));
     }
 
     @PostMapping("/signup")
@@ -92,11 +100,11 @@ public class AuthController {
         try {
             idToken = verifier.verify(googleTokenRequest.getToken());
         } catch (Exception e) {
-            return new ResponseEntity<>("Token de Google inválido", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("Token de Google inválido: " + e.getMessage(), HttpStatus.UNAUTHORIZED);
         }
 
         if (idToken == null) {
-            return new ResponseEntity<>("Token de Google inválido", HttpStatus.UNAUTHORIZED);
+            return new ResponseEntity<>("Token de Google inválido o expirado.", HttpStatus.UNAUTHORIZED);
         }
 
         GoogleIdToken.Payload payload = idToken.getPayload();
@@ -109,18 +117,23 @@ public class AuthController {
         if (userOptional.isPresent()) {
             user = userOptional.get();
         } else {
+            // Si el usuario no existe, lo creamos
             user = new User();
             user.setEmail(email);
             user.setName(name);
             user.setProvider(AuthProvider.google);
-            userRepository.save(user);
+            // Al ser login con Google, no necesita password en nuestra DB
+            user = userRepository.save(user);
         }
 
-        // Creamos una autenticación para el usuario y generamos nuestro propio token JWT
+        // Creamos una autenticación para el usuario en nuestro sistema
         Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
         SecurityContextHolder.getContext().setAuthentication(authentication);
+
+        // Generamos nuestro propio token JWT
         String jwt = tokenProvider.generateToken(authentication);
 
-        return ResponseEntity.ok(new AuthResponse(jwt));
+        // MODIFICADO: Devolver nuestro token JWT Y el objeto del usuario
+        return ResponseEntity.ok(new LoginResponse(jwt, user));
     }
 }
