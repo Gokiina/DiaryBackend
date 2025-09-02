@@ -1,4 +1,4 @@
-package com.app.Diary.security; // Asegúrate de que el paquete sea el correcto
+package com.app.Diary.security;
 
 import com.app.Diary.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
@@ -25,11 +25,20 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final CustomUserDetailsService customUserDetailsService;
-    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    // MODIFICADO: Inyectamos el proveedor de tokens, no el filtro.
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter) {
+    // MODIFICADO: El constructor ahora pide el JwtTokenProvider.
+    public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtTokenProvider jwtTokenProvider) {
         this.customUserDetailsService = customUserDetailsService;
-        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
+
+    // AÑADIDO: Creamos el bean del filtro explícitamente aquí.
+    // Esto resuelve el error "bean ... could not be found".
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtTokenProvider, customUserDetailsService);
     }
 
     @Bean
@@ -37,13 +46,11 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-    // AÑADIDO: Este Bean es la pieza que faltaba.
-    // Conecta nuestro servicio de detalles de usuario y nuestro codificador de contraseñas.
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService); // Le decimos cómo encontrar usuarios.
-        authProvider.setPasswordEncoder(passwordEncoder()); // Le decimos cómo verificar contraseñas.
+        authProvider.setUserDetailsService(customUserDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
 
@@ -74,9 +81,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**").permitAll()
                         .anyRequest().authenticated()
                 )
-                // MODIFICADO: Nos aseguramos de que el proveedor de autenticación esté registrado.
                 .authenticationProvider(authenticationProvider())
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                // MODIFICADO: Usamos el método que crea nuestro bean del filtro.
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
