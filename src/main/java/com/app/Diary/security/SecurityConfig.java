@@ -12,6 +12,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -20,49 +25,52 @@ public class SecurityConfig {
     private final CustomUserDetailsService customUserDetailsService;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    // Inyección de dependencias a través del constructor
     public SecurityConfig(CustomUserDetailsService customUserDetailsService, JwtAuthenticationFilter jwtAuthenticationFilter) {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
-    /**
-     * Define un Bean para el codificador de contraseñas.
-     * Se usará para cifrar las contraseñas al registrarse y para verificarlas durante el login.
-     */
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    /**
-     * Define el AuthenticationManager como un Bean para que Spring pueda inyectarlo
-     * en tu AuthController y procesar las peticiones de login.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
     }
 
-    /**
-     * Configura la cadena de filtros de seguridad. Aquí es donde se definen las reglas
-     * de acceso a los diferentes endpoints de la API.
-     */
+    // AÑADIDO: Bean para la configuración explícita de CORS
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        // Permitimos peticiones desde cualquier origen. Para producción, sería mejor restringirlo a tu dominio.
+        configuration.setAllowedOrigins(Arrays.asList("*"));
+        // Permitimos los métodos HTTP más comunes.
+        configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        // Permitimos las cabeceras necesarias para la autenticación y el tipo de contenido.
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Aplicamos esta configuración a todas las rutas de la aplicación.
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf(csrf -> csrf.disable()) // Deshabilitamos CSRF porque usamos JWT (stateless)
-                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // No creamos sesiones en el servidor
+                // MODIFICADO: Aplicamos la configuración CORS definida arriba.
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // LA REGLA CLAVE: Permite el acceso sin autenticación a todos los endpoints bajo /api/auth/
                         .requestMatchers("/api/auth/**").permitAll()
-                        // Para cualquier otra petición, se requiere que el usuario esté autenticado.
                         .anyRequest().authenticated()
                 )
-                // Añadimos nuestro filtro personalizado (JwtAuthenticationFilter) antes del filtro estándar de Spring.
-                // Este filtro se encargará de validar el token en cada petición protegida.
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 }
+
