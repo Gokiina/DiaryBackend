@@ -7,6 +7,8 @@ import com.app.Diary.payload.LoginResponse;
 import com.app.Diary.payload.SignUpRequest;
 import com.app.Diary.repository.UserRepository;
 import com.app.Diary.security.JwtTokenProvider;
+// AÑADIDO: Importamos el servicio para cargar los detalles del usuario
+import com.app.Diary.service.CustomUserDetailsService;
 
 // Imports para Google
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -40,7 +42,6 @@ import java.util.Optional;
 @RequestMapping("/api/auth")
 public class AuthController {
 
-    // AÑADIDO: Logger para depuración
     private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
@@ -55,12 +56,15 @@ public class AuthController {
     @Autowired
     private JwtTokenProvider tokenProvider;
 
+    // AÑADIDO: Inyectamos el servicio de detalles de usuario
+    @Autowired
+    private CustomUserDetailsService customUserDetailsService;
+
     @Value("${spring.security.oauth2.client.registration.google.client-id}")
     private String googleClientId;
 
     @PostMapping("/signin")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
-        // ... (sin cambios en este método)
         Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(loginRequest.getEmail(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
@@ -71,7 +75,6 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpRequest signUpRequest) {
-        // ... (sin cambios en este método)
         if (userRepository.findByEmail(signUpRequest.getEmail()).isPresent()) {
             return new ResponseEntity<>("¡El correo electrónico ya está en uso!", HttpStatus.BAD_REQUEST);
         }
@@ -86,7 +89,6 @@ public class AuthController {
 
     @PostMapping("/google")
     public ResponseEntity<?> authenticateUserWithGoogle(@RequestBody GoogleTokenRequest googleTokenRequest) {
-        // AÑADIDO: Logs de depuración detallados
         logger.info("Recibida petición de autenticación con Google.");
         logger.debug("Client ID que se usará para la verificación: {}", googleClientId);
 
@@ -132,7 +134,13 @@ public class AuthController {
             logger.info("Nuevo usuario creado con ID: {}", user.getId());
         }
 
-        Authentication authentication = new UsernamePasswordAuthenticationToken(user.getEmail(), null, Collections.emptyList());
+        // --- CORRECCIÓN FINAL ---
+        // 1. Cargamos el objeto UserDetails completo desde nuestro servicio.
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(user.getEmail());
+
+        // 2. Creamos la autenticación con el objeto UserDetails, no con el String del email.
+        Authentication authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+
         SecurityContextHolder.getContext().setAuthentication(authentication);
         String jwt = tokenProvider.generateToken(authentication);
 
@@ -140,3 +148,4 @@ public class AuthController {
         return ResponseEntity.ok(new LoginResponse(jwt, user));
     }
 }
+
