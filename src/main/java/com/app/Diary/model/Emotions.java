@@ -11,6 +11,8 @@ public class Emotions {
     @Id
     private String id;
 
+    private String userEmail;
+
     @JsonFormat(pattern = "yyyy-MM-dd")
     private LocalDate date;
 
@@ -38,5 +40,13 @@ public class Emotions {
 
     public void setEmotion(String emotion) {
         this.emotion = emotion;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

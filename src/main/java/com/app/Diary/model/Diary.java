@@ -9,6 +9,8 @@ public class Diary {
     @Id
     private String id;
 
+    private String userEmail;
+
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private String date;
 
@@ -38,5 +40,13 @@ public class Diary {
 
     public void setContent(String content) {
         this.content = content;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

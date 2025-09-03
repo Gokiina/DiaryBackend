@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Notes {
     @Id
     private String id;
+    private String userEmail;
     private String textNote;
 
 
@@ -24,5 +25,13 @@ public class Notes {
 
     public void setTextNote(String textNote) {
         this.textNote = textNote;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }

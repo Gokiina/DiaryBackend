@@ -7,6 +7,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 public class Phrases {
     @Id
     private String id;
+    private String userEmail;
     private String phrase;
     private boolean isFavorite;
 
@@ -32,6 +33,14 @@ public class Phrases {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }
 

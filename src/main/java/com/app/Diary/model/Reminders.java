@@ -10,6 +10,7 @@ import java.util.Date;
 public class Reminders {
     @Id
     private String id;
+    private String userEmail;
     private String title;
     private String notes;
     private String url;
@@ -90,6 +91,14 @@ public class Reminders {
 
     public void setCompleted(boolean completed) {
         this.completed = completed;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
     }
 }
 
