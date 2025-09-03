@@ -44,17 +44,6 @@ public class PhrasesController {
 
         if (phraseOptional.isPresent()) {
             Phrases phrase = phraseOptional.get();
-
-            // La lógica de a quién pertenece una frase favorita se maneja en una lista en el frontend
-            // o se podría crear un modelo de datos más complejo (ej. una tabla UserFavorites).
-            // Por ahora, el endpoint simplemente actúa como un interruptor que el frontend puede usar.
-            // Para este ejemplo, vamos a simular que el campo 'favorite' es específico del usuario,
-            // aunque en un modelo real esto sería más complejo.
-
-            // NOTA: Esta implementación de favoritos es una simplificación. En una app real,
-            // el estado "favorito" debería guardarse por usuario, no en la frase misma.
-            // Pero para que tu endpoint funcione, lo implementamos así.
-            phrase.setFavorite(!phrase.isFavorite());
             return ResponseEntity.ok(phrasesRepository.save(phrase));
 
         } else {

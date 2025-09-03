@@ -4,6 +4,9 @@ import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.index.Indexed;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Document(collection = "users") // Esto le dice a MongoDB que guarde los usuarios en una colección llamada "users"
 public class User {
 
@@ -70,5 +73,14 @@ public class User {
 
     public void setPremium(boolean premium) {
         isPremium = premium;
+    }
+    private List<String> favoritePhraseIds = new ArrayList<>();
+
+    public List<String> getFavoritePhraseIds() {
+        return favoritePhraseIds;
+    }
+
+    public void setFavoritePhraseIds(List<String> favoritePhraseIds) {
+        this.favoritePhraseIds = favoritePhraseIds;
     }
 }

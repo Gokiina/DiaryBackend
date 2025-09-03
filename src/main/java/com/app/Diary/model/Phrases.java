@@ -9,7 +9,6 @@ public class Phrases {
     private String id;
     private String userEmail;
     private String phrase;
-    private boolean isFavorite;
 
     public String getPhrase() {
         return phrase;
@@ -17,14 +16,6 @@ public class Phrases {
 
     public void setPhrase(String phrase) {
         this.phrase = phrase;
-    }
-
-    public boolean isFavorite() {
-        return isFavorite;
-    }
-
-    public void setFavorite(boolean favorite) {
-        isFavorite = favorite;
     }
 
     public String getId() {
