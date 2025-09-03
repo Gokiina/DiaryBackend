@@ -1,4 +1,4 @@
-package com.app.Diary.service; // Asegúrate de que el paquete sea correcto
+package com.app.Diary.service;
 
 import com.app.Diary.model.User;
 import com.app.Diary.repository.UserRepository;
@@ -8,7 +8,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.Collections;
 
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -16,26 +16,28 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    /**
-     * Este método es llamado por Spring Security para cargar un usuario por su email.
-     * @param email El email del usuario que intenta autenticarse.
-     * @return Un objeto UserDetails que Spring Security usará para la autenticación.
-     * @throws UsernameNotFoundException si el usuario no se encuentra en la base de datos.
-     */
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        // Buscamos al usuario en nuestra base de datos por su email.
+        // 1. Buscamos el usuario en nuestra base de datos por su email.
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() ->
-                        new UsernameNotFoundException("No se encontró un usuario con el email: " + email)
-                );
+                .orElseThrow(() -> new UsernameNotFoundException("No se encontró un usuario con el email: " + email));
 
-        // Creamos un objeto UserDetails de Spring Security.
-        // Por ahora, no estamos manejando roles o permisos complejos, así que la lista de "authorities" está vacía.
+        // --- ESTA ES LA CORRECCIÓN FINAL ---
+        // 2. Verificamos si el usuario tiene una contraseña.
+        // Los usuarios de Google no tendrán una, por lo que user.getPassword() será null.
+        String password = user.getPassword();
+        if (password == null) {
+            // Si no hay contraseña, usamos una cadena vacía como placeholder.
+            // El constructor de User de Spring Security no acepta null.
+            password = "";
+        }
+
+        // 3. Creamos y devolvemos el objeto UserDetails que Spring Security necesita,
+        // usando la contraseña (real o el placeholder vacío).
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
-                user.getPassword(),
-                new ArrayList<>() // Lista de roles/permisos (authorities)
+                password,
+                Collections.emptyList() // Asumimos que no usamos roles por ahora
         );
     }
 }
