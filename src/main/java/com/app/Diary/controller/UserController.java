@@ -32,11 +32,8 @@ public class UserController {
         String userEmail = getCurrentUserEmail();
         Optional<User> userOptional = userRepository.findByEmail(userEmail);
 
-        if (userOptional.isPresent()) {
-            return ResponseEntity.ok(userOptional.get().getFavoritePhraseIds());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
+        return userOptional.map(user -> ResponseEntity.ok(user.getFavoritePhraseIds()))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
     }
 
     // Añade o quita una frase de la lista de favoritos del usuario

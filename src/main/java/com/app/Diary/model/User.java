@@ -24,6 +24,8 @@ public class User {
 
     private boolean isPremium = false; // Por defecto, los usuarios no son premium
 
+    private List<String> favoritePhraseIds = new ArrayList<>();
+
     // --- Getters y Setters ---
     // (Puedes generarlos automáticamente en IntelliJ con clic derecho -> Generate -> Getters and Setters)
 
@@ -74,7 +76,6 @@ public class User {
     public void setPremium(boolean premium) {
         isPremium = premium;
     }
-    private List<String> favoritePhraseIds = new ArrayList<>();
 
     public List<String> getFavoritePhraseIds() {
         return favoritePhraseIds;
