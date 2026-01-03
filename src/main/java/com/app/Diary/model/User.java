@@ -1,33 +1,37 @@
-package com.app.Diary.model; // Asegúrate de que el paquete sea correcto
+package com.app.Diary.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.index.Indexed;
+import jakarta.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
-import java.util.ArrayList;
-import java.util.List;
-
-@Document(collection = "users") // Esto le dice a MongoDB que guarde los usuarios en una colección llamada "users"
+@Entity
+@Table(name = "users")
 public class User {
 
     @Id
-    private String id;
+    private String id; // Keeping String to match existing data (likely Mongo ObjectIds)
 
-    @Indexed(unique = true) // Asegura que no puede haber dos usuarios con el mismo email
+    @Column(unique = true, nullable = false)
     private String email;
 
     private String name;
 
-    private String password; // Este campo lo usaremos si implementamos registro con contraseña
+    private String password;
 
-    private AuthProvider provider; // Para saber si se registró con "google" o "local"
+    @Enumerated(EnumType.STRING)
+    private AuthProvider provider;
 
-    private boolean isPremium = false; // Por defecto, los usuarios no son premium
+    private boolean isPremium = false;
 
-    private List<String> favoritePhraseIds = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+        name = "user_favorite_phrases",
+        joinColumns = @JoinColumn(name = "user_id"),
+        inverseJoinColumns = @JoinColumn(name = "phrase_id")
+    )
+    private Set<Phrases> favoritePhrases = new HashSet<>();
 
     // --- Getters y Setters ---
-    // (Puedes generarlos automáticamente en IntelliJ con clic derecho -> Generate -> Getters and Setters)
 
     public String getId() {
         return id;
@@ -77,11 +81,11 @@ public class User {
         isPremium = premium;
     }
 
-    public List<String> getFavoritePhraseIds() {
-        return favoritePhraseIds;
+    public Set<Phrases> getFavoritePhrases() {
+        return favoritePhrases;
     }
 
-    public void setFavoritePhraseIds(List<String> favoritePhraseIds) {
-        this.favoritePhraseIds = favoritePhraseIds;
+    public void setFavoritePhrases(Set<Phrases> favoritePhrases) {
+        this.favoritePhrases = favoritePhrases;
     }
 }

@@ -1,19 +1,27 @@
 package com.app.Diary.model;
 
-import org.springframework.data.annotation.Id;
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-@Document(collection = "Diary")
+@Entity
+@Table(name = "diary")
 public class Diary {
     @Id
     private String id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userEmail", referencedColumnName = "email")
+    @JsonIgnore // Prevent infinite recursion or leaking user details if not needed
+    private User user;
+
+    @Column(name = "userEmail", insertable = false, updatable = false)
     private String userEmail;
 
     @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private String date;
 
+    @Column(columnDefinition = "TEXT")
     private String content;
 
     public Diary() {}
@@ -42,10 +50,20 @@ public class Diary {
         this.content = content;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public String getUserEmail() {
         return userEmail;
     }
 
+    // Allow setting email manually if needed for transient objects,
+    // but primarily use setUser
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
     }
