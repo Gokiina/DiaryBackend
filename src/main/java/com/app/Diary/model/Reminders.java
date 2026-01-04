@@ -2,13 +2,13 @@ package com.app.Diary.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.springframework.data.annotation.CreatedDate;
 import java.util.Date;
 
 @Entity
-@Table(name = "reminders")
+@Table(name = "\"Reminders\"")
 public class Reminders {
     @Id
+    @Column(name = "_id")
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

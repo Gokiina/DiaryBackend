@@ -3,10 +3,11 @@ package com.app.Diary.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "phrases")
+@Table(name = "\"Phrases\"")
 public class Phrases {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "_id")
     private Long id;
 
     @Column(columnDefinition = "TEXT")

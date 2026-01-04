@@ -6,10 +6,11 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "emotions")
+@Table(name = "\"Emotions\"")
 public class Emotions {
 
     @Id
+    @Column(name = "_id")
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

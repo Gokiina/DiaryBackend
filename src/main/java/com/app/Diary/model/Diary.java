@@ -5,9 +5,10 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "diary")
+@Table(name = "\"Diary\"")
 public class Diary {
     @Id
+    @Column(name = "_id")
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

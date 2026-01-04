@@ -4,9 +4,10 @@ import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 @Entity
-@Table(name = "notes")
+@Table(name = "\"Notes\"")
 public class Notes {
     @Id
+    @Column(name = "_id")
     private String id;
 
     @ManyToOne(fetch = FetchType.LAZY)

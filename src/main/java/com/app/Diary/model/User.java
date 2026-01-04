@@ -5,11 +5,12 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@Table(name = "users")
+@Table(name = "\"Users\"")
 public class User {
 
     @Id
-    private String id; // Keeping String to match existing data (likely Mongo ObjectIds)
+    @Column(name = "_id")
+    private String id;
 
     @Column(unique = true, nullable = false)
     private String email;
@@ -21,6 +22,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     private AuthProvider provider;
 
+    @Column(name = "isPremium")
     private boolean isPremium = false;
 
     @ManyToMany(fetch = FetchType.EAGER)
