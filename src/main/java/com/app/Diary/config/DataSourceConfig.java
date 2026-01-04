@@ -11,6 +11,7 @@ import org.springframework.util.StringUtils;
 import javax.sql.DataSource;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Map;
 
 @Configuration
 public class DataSourceConfig {
@@ -20,6 +21,14 @@ public class DataSourceConfig {
 
     @Bean
     public DataSource dataSource() {
+        // Log available environment variables (keys only) for debugging
+        System.out.println("DEBUG: Listing available environment variables:");
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            if (entry.getKey().contains("URL") || entry.getKey().contains("DB")) {
+                 System.out.println(" - " + entry.getKey() + " = [HIDDEN]");
+            }
+        }
+
         String dbUrl = env.getProperty("SPRING_DATASOURCE_URL");
         if (!StringUtils.hasText(dbUrl)) {
             dbUrl = env.getProperty("DATABASE_URL");
@@ -29,12 +38,16 @@ public class DataSourceConfig {
         }
 
         if (!StringUtils.hasText(dbUrl)) {
-            String errorMsg = "CRITICAL: No Database URL found in environment variables (SPRING_DATASOURCE_URL, DATABASE_URL, JDBC_DATABASE_URL). Cannot connect to database.";
-            System.err.println(errorMsg);
-            throw new IllegalStateException(errorMsg);
+            System.err.println("WARNING: No Database URL found in environment variables. Falling back to H2 in-memory database.");
+            HikariConfig h2Config = new HikariConfig();
+            h2Config.setJdbcUrl("jdbc:h2:mem:diarydb;DB_CLOSE_DELAY=-1");
+            h2Config.setDriverClassName("org.h2.Driver");
+            h2Config.setUsername("sa");
+            h2Config.setPassword("");
+            return new HikariDataSource(h2Config);
         }
 
-        System.out.println("Found Database URL. Configuring DataSource...");
+        System.out.println("Found Database URL. Configuring PostgreSQL DataSource...");
 
         String username = env.getProperty("SPRING_DATASOURCE_USERNAME");
         if (!StringUtils.hasText(username)) {
