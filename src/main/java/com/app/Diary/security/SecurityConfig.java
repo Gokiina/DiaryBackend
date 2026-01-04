@@ -3,6 +3,7 @@ package com.app.Diary.security;
 import com.app.Diary.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -59,11 +60,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
+        // Wildcard allowed for testing, but typically needs specific origins for Credentials
         configuration.setAllowedOrigins(Arrays.asList("*"));
-        // --- ESTA ES LA LÍNEA CORREGIDA ---
-        // Añadimos "OPTIONS" a la lista de métodos permitidos.
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
-        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
+        configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With", "Accept", "Origin"));
+        // configuration.setAllowCredentials(true); // Cannot use with "*" origin in some browsers
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -77,7 +78,9 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly allow OPTIONS
                         .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/health").permitAll() // Allow health check
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
