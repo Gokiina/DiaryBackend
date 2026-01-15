@@ -1,25 +1,36 @@
 package com.app.Diary.model;
 
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
-
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.Date;
 
-@Document(collection = "Reminders")
+@Entity
+@Table(name = "\"Reminders\"")
 public class Reminders {
     @Id
+    @Column(name = "_id")
     private String id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userEmail", referencedColumnName = "email")
+    @JsonIgnore
+    private User user;
+
+    @Column(name = "userEmail", insertable = false, updatable = false)
     private String userEmail;
+
     private String title;
+
+    @Column(columnDefinition = "TEXT")
     private String notes;
+
     private String url;
     private String date;
     private String time;
     private boolean flagged;
     private boolean completed;
 
-    @CreatedDate
+    @Temporal(TemporalType.TIMESTAMP)
     private Date createdAt;
 
     public Date getCreatedAt() {
@@ -93,6 +104,14 @@ public class Reminders {
         this.completed = completed;
     }
 
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     public String getUserEmail() {
         return userEmail;
     }
@@ -101,4 +120,3 @@ public class Reminders {
         this.userEmail = userEmail;
     }
 }
-

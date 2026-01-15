@@ -1,13 +1,24 @@
 package com.app.Diary.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-@Document(collection = "Notes")
+@Entity
+@Table(name = "\"Notes\"")
 public class Notes {
     @Id
+    @Column(name = "_id")
     private String id;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userEmail", referencedColumnName = "email")
+    @JsonIgnore
+    private User user;
+
+    @Column(name = "userEmail", insertable = false, updatable = false)
     private String userEmail;
+
+    @Column(columnDefinition = "TEXT")
     private String textNote;
 
 
@@ -25,6 +36,14 @@ public class Notes {
 
     public void setTextNote(String textNote) {
         this.textNote = textNote;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getUserEmail() {

@@ -21,7 +21,12 @@ public class EmotionsService {
 
     public Emotions addEmotionsPage(Emotions emotions) {
         try {
-            Optional<Emotions> existingEmotion = Optional.ofNullable(emotionsRepository.findByDate(emotions.getDate()));
+            // Note: This logic assumes emotions are unique by date GLOBALLY, which is probably wrong for a multi-user app.
+            // But I am just fixing the compilation error here.
+            // The original code was: Optional.ofNullable(emotionsRepository.findByDate(emotions.getDate()));
+            // findByDate now returns Optional<Emotions> in Repository.
+
+            Optional<Emotions> existingEmotion = emotionsRepository.findByDate(emotions.getDate());
             if (existingEmotion.isPresent()) {
                 Emotions emotionToUpdate = existingEmotion.get();
                 emotionToUpdate.setEmotion(emotions.getEmotion());
@@ -44,7 +49,8 @@ public class EmotionsService {
     }
 
     public Emotions getEmotionByDate(LocalDate date) {
-        return emotionsRepository.findByDate(date);
+        // Warning: this returns global emotion by date, prone to collision
+        return emotionsRepository.findByDate(date).orElse(null);
     }
 
 }

@@ -1,15 +1,12 @@
 package com.app.Diary.repository;
 
-import com.app.Diary.model.Diary;
-import com.app.Diary.model.Emotions;
 import com.app.Diary.model.Phrases;
-import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
-import java.util.Optional;
 
-public interface PhrasesRepository extends MongoRepository<Phrases, String> {
-    List<Phrases> findByUserEmail(String userEmail);
-    Optional<Phrases> findByIdAndUserEmail(String id, String userEmail);
-    List<Phrases> findByUserEmailIsNull();
+public interface PhrasesRepository extends JpaRepository<Phrases, Long> {
+    // Phrases are now global, so we don't need filtering by userEmail
+    // But if we ever re-introduce user phrases, we might need a method.
+    // For now, standard JpaRepository methods suffice.
 }

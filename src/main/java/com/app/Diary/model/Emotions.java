@@ -1,16 +1,24 @@
 package com.app.Diary.model;
 
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.time.LocalDate;
 
-@Document(collection = "Emotions")
+@Entity
+@Table(name = "\"Emotions\"")
 public class Emotions {
 
     @Id
+    @Column(name = "_id")
     private String id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userEmail", referencedColumnName = "email")
+    @JsonIgnore
+    private User user;
+
+    @Column(name = "userEmail", insertable = false, updatable = false)
     private String userEmail;
 
     @JsonFormat(pattern = "yyyy-MM-dd")
@@ -40,6 +48,14 @@ public class Emotions {
 
     public void setEmotion(String emotion) {
         this.emotion = emotion;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getUserEmail() {

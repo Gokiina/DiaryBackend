@@ -1,14 +1,19 @@
 package com.app.Diary.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import jakarta.persistence.*;
 
-@Document(collection = "Phrases")
+@Entity
+@Table(name = "\"Phrases\"")
 public class Phrases {
     @Id
-    private String id;
-    private String userEmail;
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "_id")
+    private Long id;
+
+    @Column(columnDefinition = "TEXT")
     private String phrase;
+
+    // Removed userEmail as phrases are global
 
     public String getPhrase() {
         return phrase;
@@ -18,20 +23,11 @@ public class Phrases {
         this.phrase = phrase;
     }
 
-    public String getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(Long id) {
         this.id = id;
     }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
 }
-
